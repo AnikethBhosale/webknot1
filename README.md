@@ -1,4 +1,5 @@
-#Campus Event Management Platform :
+# Campus Event Management Platform :
+
 The platform is MERN stack application , and based on the assignment , the Admin page is web based and thus, 
 uses React.js while the Student page is app based  and uses Ract Native .
 The inspiration for the app compes from a combination of Luma events and Salesforce.
