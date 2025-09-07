@@ -56,15 +56,15 @@ Business College: admin@businesscollege.edu / admin123
 Arts Institute: admin@artsinstitute.edu / admin123
 
 -**Students** :
-Tech University:
+-Tech University:
 - john.doe@student.techuniversity.edu / student123
 - jane.smith@student.techuniversity.edu / student123
 
-Business College:
+-Business College:
 - mike.johnson@student.businesscollege.edu / student123
 - sarah.wilson@student.businesscollege.edu / student123
 
-Arts Institute:
+-Arts Institute:
 - david.brown@student.artsinstitute.edu / student123
 - emma.davis@student.artsinstitute.edu / student123
 
@@ -73,16 +73,16 @@ Arts Institute:
 
 ## To Run the App :
 -**Backend** :
-cd backend
-npm run dev
+-cd backend
+-npm run dev
 
 -**Admin Frontend** :
-cd admin-portal
-npm start
+-cd admin-portal
+-npm start
 
 -**Mobile app** :
-cd student-app
-npm start
+-cd student-app
+-npm start
 
 
 
