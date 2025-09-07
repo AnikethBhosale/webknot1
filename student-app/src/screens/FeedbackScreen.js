@@ -16,7 +16,33 @@ import {
 } from 'react-native-paper';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-import StarRating from 'react-native-star-rating';
+// Custom Star Rating Component for Web Compatibility
+const StarRating = ({ maxStars, rating, selectedStar, fullStarColor, emptyStarColor, starSize, containerStyle }) => {
+  const stars = [];
+  
+  for (let i = 1; i <= maxStars; i++) {
+    stars.push(
+      <Text
+        key={i}
+        style={{
+          fontSize: starSize,
+          color: i <= rating ? fullStarColor : emptyStarColor,
+          marginHorizontal: 2,
+          cursor: 'pointer'
+        }}
+        onPress={() => selectedStar(i)}
+      >
+        ★
+      </Text>
+    );
+  }
+  
+  return (
+    <View style={[{ flexDirection: 'row', alignItems: 'center' }, containerStyle]}>
+      {stars}
+    </View>
+  );
+};
 
 const FeedbackScreen = () => {
   const route = useRoute();
