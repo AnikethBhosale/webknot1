@@ -112,9 +112,24 @@ const Events = () => {
     if (window.confirm('Are you sure you want to cancel this event?')) {
       try {
         await axios.delete(`/api/events/${eventId}/cancel`);
+        setMessage('Event cancelled successfully!');
         fetchEvents();
       } catch (error) {
         console.error('Error cancelling event:', error);
+        setError(error.response?.data?.message || 'Failed to cancel event');
+      }
+    }
+  };
+
+  const handleDelete = async (eventId) => {
+    if (window.confirm('Are you sure you want to permanently delete this event? This action cannot be undone and will remove all event data including registrations and feedback.')) {
+      try {
+        const response = await axios.delete(`/api/events/${eventId}/delete`);
+        setMessage(response.data.message || 'Event deleted successfully!');
+        fetchEvents();
+      } catch (error) {
+        console.error('Error deleting event:', error);
+        setError(error.response?.data?.message || 'Failed to delete event');
       }
     }
   };
@@ -254,11 +269,18 @@ const Events = () => {
                   {event.status === 'upcoming' && (
                     <button
                       onClick={() => handleCancel(event._id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-orange-600 hover:text-orange-900"
                     >
                       Cancel
                     </button>
                   )}
+                  <button
+                    onClick={() => handleDelete(event._id)}
+                    className="text-red-600 hover:text-red-900"
+                    title="Permanently delete this event and all related data"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}

@@ -247,4 +247,65 @@ router.delete('/:id/cancel', adminAuth, async (req, res) => {
   }
 });
 
+// Delete event permanently
+router.delete('/:id/delete', adminAuth, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Check if admin owns this event
+    if (event.college_id.toString() !== req.admin.college_id.toString()) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Get related data counts for response
+    const Registration = require('../models/Registration');
+    const Feedback = require('../models/Feedback');
+    
+    const registrations = await Registration.find({ event_id: req.params.id });
+    const feedback = await Feedback.find({ event_id: req.params.id });
+
+    // Delete all related data first (cascade delete)
+    if (registrations.length > 0) {
+      await Registration.deleteMany({ event_id: req.params.id });
+    }
+
+    if (feedback.length > 0) {
+      await Feedback.deleteMany({ event_id: req.params.id });
+    }
+
+    // Delete the event
+    await Event.findByIdAndDelete(req.params.id);
+
+    // Prepare response message with deletion summary
+    let message = 'Event deleted successfully';
+    const deletedItems = [];
+    
+    if (registrations.length > 0) {
+      deletedItems.push(`${registrations.length} registration${registrations.length > 1 ? 's' : ''}`);
+    }
+    
+    if (feedback.length > 0) {
+      deletedItems.push(`${feedback.length} feedback record${feedback.length > 1 ? 's' : ''}`);
+    }
+    
+    if (deletedItems.length > 0) {
+      message += `. Also deleted: ${deletedItems.join(', ')}.`;
+    }
+
+    res.json({ 
+      message,
+      deletedData: {
+        registrations: registrations.length,
+        feedback: feedback.length
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

@@ -181,4 +181,49 @@ router.delete('/admins/:adminId', [adminAuth, superAdminAuth], async (req, res) 
   }
 });
 
+// Delete college
+router.delete('/colleges/:collegeId', [adminAuth, superAdminAuth], async (req, res) => {
+  try {
+    const { collegeId } = req.params;
+    
+    const college = await College.findById(collegeId);
+    if (!college) {
+      return res.status(404).json({ message: 'College not found' });
+    }
+
+    // Check if college has any admins
+    const collegeAdmins = await Admin.find({ college_id: collegeId });
+    if (collegeAdmins.length > 0) {
+      return res.status(400).json({ 
+        message: 'Cannot delete college with existing admins. Please delete all admins first.' 
+      });
+    }
+
+    // Check if college has any students
+    const Student = require('../models/Student');
+    const collegeStudents = await Student.find({ college_id: collegeId });
+    if (collegeStudents.length > 0) {
+      return res.status(400).json({ 
+        message: 'Cannot delete college with existing students. Please delete all students first.' 
+      });
+    }
+
+    // Check if college has any events
+    const Event = require('../models/Event');
+    const collegeEvents = await Event.find({ college_id: collegeId });
+    if (collegeEvents.length > 0) {
+      return res.status(400).json({ 
+        message: 'Cannot delete college with existing events. Please delete all events first.' 
+      });
+    }
+
+    await College.findByIdAndDelete(collegeId);
+    
+    res.json({ message: 'College deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

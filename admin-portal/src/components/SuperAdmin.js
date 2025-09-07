@@ -108,6 +108,23 @@ const SuperAdmin = () => {
     }
   };
 
+  const handleDeleteCollege = async (collegeId) => {
+    if (!window.confirm('Are you sure you want to delete this college? This action cannot be undone and will delete all associated data.')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/superadmin/colleges/${collegeId}`);
+      setMessage('College deleted successfully!');
+      
+      // Refresh the data
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting college:', error);
+      setError(error.response?.data?.message || 'Failed to delete college');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -158,13 +175,24 @@ const SuperAdmin = () => {
               return (
                 <div key={college._id} className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-4">
-                    <div>
+                    <div className="flex-1">
                       <h4 className="font-semibold text-gray-900 text-lg">{college.name}</h4>
                       <p className="text-sm text-gray-600 mt-1">{college.address}</p>
                     </div>
-                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {collegeAdminsList.length} Admin{collegeAdminsList.length !== 1 ? 's' : ''}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {collegeAdminsList.length} Admin{collegeAdminsList.length !== 1 ? 's' : ''}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteCollege(college._id)}
+                        className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50 transition-colors"
+                        title="Delete College"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="mt-4">
