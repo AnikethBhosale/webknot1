@@ -22,6 +22,12 @@ const ProfileScreen = () => {
   const { student, logout } = useAuth();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
   const [formData, setFormData] = useState({
     name: student?.name || '',
     email: student?.email || ''
@@ -61,16 +67,70 @@ const ProfileScreen = () => {
     setEditing(false);
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', onPress: logout }
-      ]
-    );
+  const handleChangePassword = () => {
+    setShowPasswordModal(true);
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
   };
+
+  const handlePasswordInputChange = (field, value) => {
+    setPasswordData({
+      ...passwordData,
+      [field]: value
+    });
+  };
+
+  const handlePasswordSubmit = async () => {
+    console.log('🔐 Change password attempt started');
+    console.log('📝 Password data:', {
+      currentPassword: passwordData.currentPassword ? '***' : 'empty',
+      newPassword: passwordData.newPassword ? '***' : 'empty',
+      confirmPassword: passwordData.confirmPassword ? '***' : 'empty'
+    });
+
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      Alert.alert('Error', 'New passwords do not match');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      Alert.alert('Error', 'New password must be at least 6 characters long');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('🌐 Making API call to change password...');
+      const response = await axios.put('http://localhost:5000/api/students/change-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+      
+      console.log('✅ Password change successful:', response.data);
+      Alert.alert('Success', 'Password changed successfully');
+      setShowPasswordModal(false);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      console.error('❌ Password change failed:', error);
+      const message = error.response?.data?.message || 'Failed to change password';
+      Alert.alert('Error', message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <ScrollView style={styles.container}>
@@ -182,25 +242,95 @@ const ProfileScreen = () => {
 
             <Button
               mode="outlined"
-              onPress={() => {
-                // Navigate to change password screen
-                Alert.alert('Coming Soon', 'Change password feature will be available soon');
-              }}
+              onPress={handleChangePassword}
               style={styles.actionButton}
             >
               Change Password
             </Button>
 
-            <Button
-              mode="contained"
-              onPress={handleLogout}
-              style={[styles.actionButton, styles.logoutButton]}
+            {/* Working logout button */}
+            <button
+              onClick={() => {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = window.location.origin + window.location.pathname;
+              }}
+              style={{
+                backgroundColor: '#dc2626',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                width: '100%',
+                marginTop: '8px'
+              }}
             >
               Logout
-            </Button>
+            </button>
+
           </Card.Content>
         </Card>
       </View>
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <View style={styles.modalOverlay}>
+          <Card style={styles.modalCard}>
+            <Card.Content>
+              <Title style={styles.modalTitle}>Change Password</Title>
+              
+              <TextInput
+                label="Current Password"
+                value={passwordData.currentPassword}
+                onChangeText={(value) => handlePasswordInputChange('currentPassword', value)}
+                mode="outlined"
+                secureTextEntry
+                style={styles.modalInput}
+              />
+              
+              <TextInput
+                label="New Password"
+                value={passwordData.newPassword}
+                onChangeText={(value) => handlePasswordInputChange('newPassword', value)}
+                mode="outlined"
+                secureTextEntry
+                style={styles.modalInput}
+              />
+              
+              <TextInput
+                label="Confirm New Password"
+                value={passwordData.confirmPassword}
+                onChangeText={(value) => handlePasswordInputChange('confirmPassword', value)}
+                mode="outlined"
+                secureTextEntry
+                style={styles.modalInput}
+              />
+              
+              <View style={styles.modalButtons}>
+                <Button
+                  mode="outlined"
+                  onPress={() => setShowPasswordModal(false)}
+                  style={styles.modalButton}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  mode="contained"
+                  onPress={handlePasswordSubmit}
+                  loading={loading}
+                  disabled={loading}
+                  style={styles.modalButton}
+                >
+                  Change Password
+                </Button>
+              </View>
+            </Card.Content>
+          </Card>
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -297,6 +427,48 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: '#ef4444',
+  },
+  debugButton: {
+    borderColor: '#f59e0b',
+    borderWidth: 1,
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalCard: {
+    width: '90%',
+    maxWidth: 400,
+    elevation: 8,
+    borderRadius: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalInput: {
+    marginBottom: 16,
+    backgroundColor: 'white',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 1,
+    marginHorizontal: 8,
+    borderRadius: 8,
   },
 });
 

@@ -15,7 +15,7 @@ import {
   ActivityIndicator,
   Text
 } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 
 const MyEventsScreen = () => {
@@ -29,13 +29,27 @@ const MyEventsScreen = () => {
     fetchMyEvents();
   }, []);
 
+  // Refresh when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchMyEvents();
+    }, [])
+  );
+
   const fetchMyEvents = async () => {
     try {
+      console.log('📅 Fetching my events...');
       const response = await axios.get('http://localhost:5000/api/students/me/events');
+      console.log('✅ My events data:', response.data);
       setRegistrations(response.data);
     } catch (error) {
-      console.error('Error fetching my events:', error);
-      Alert.alert('Error', 'Failed to load your events');
+      console.error('❌ Error fetching my events:', error);
+      if (error.response?.status === 401) {
+        Alert.alert('Error', 'Please login again');
+      } else {
+        Alert.alert('Error', 'Failed to load your events');
+      }
+      setRegistrations([]);
     } finally {
       setLoading(false);
     }
@@ -75,7 +89,14 @@ const MyEventsScreen = () => {
 
   const canGiveFeedback = (registration) => {
     return registration.status === 'attended' && 
-           registration.event_id.status === 'completed';
+           registration.event_id.status === 'completed' &&
+           !registration.hasFeedback;
+  };
+
+  const hasGivenFeedback = (registration) => {
+    return registration.status === 'attended' && 
+           registration.event_id.status === 'completed' &&
+           registration.hasFeedback;
   };
 
   const renderRegistration = ({ item }) => (
@@ -136,6 +157,17 @@ const MyEventsScreen = () => {
                 style={styles.feedbackButton}
               >
                 Give Feedback
+              </Button>
+            )}
+            
+            {hasGivenFeedback(item) && (
+              <Button 
+                mode="outlined" 
+                compact
+                disabled
+                style={styles.feedbackGivenButton}
+              >
+                Feedback Given ✓
               </Button>
             )}
           </View>
@@ -269,6 +301,10 @@ const styles = StyleSheet.create({
   },
   feedbackButton: {
     backgroundColor: '#10b981',
+  },
+  feedbackGivenButton: {
+    borderColor: '#10b981',
+    borderWidth: 1,
   },
   emptyContainer: {
     flex: 1,

@@ -44,9 +44,14 @@ const EventDetailScreen = () => {
       if (registration) {
         setIsRegistered(true);
         setRegistrationStatus(registration.status);
+      } else {
+        setIsRegistered(false);
+        setRegistrationStatus('');
       }
     } catch (error) {
       console.error('Error checking registration:', error);
+      setIsRegistered(false);
+      setRegistrationStatus('');
     }
   };
 
@@ -65,7 +70,13 @@ const EventDetailScreen = () => {
       setIsRegistered(true);
       setRegistrationStatus('registered');
       Alert.alert('Success', 'Successfully registered for the event!');
+      
+      // Refresh registration status to ensure consistency
+      setTimeout(() => {
+        checkRegistrationStatus();
+      }, 1000);
     } catch (error) {
+      console.error('Registration error:', error);
       const message = error.response?.data?.message || 'Registration failed';
       Alert.alert('Error', message);
     } finally {
@@ -81,7 +92,13 @@ const EventDetailScreen = () => {
       setIsRegistered(false);
       setRegistrationStatus('');
       Alert.alert('Success', 'Successfully unregistered from the event!');
+      
+      // Refresh registration status to ensure consistency
+      setTimeout(() => {
+        checkRegistrationStatus();
+      }, 1000);
     } catch (error) {
+      console.error('Unregistration error:', error);
       const message = error.response?.data?.message || 'Unregistration failed';
       Alert.alert('Error', message);
     } finally {

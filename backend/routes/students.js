@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const Student = require('../models/Student');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
+const Feedback = require('../models/Feedback');
 const { adminAuth, studentAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -41,6 +42,41 @@ router.get('/list', adminAuth, async (req, res) => {
   }
 });
 
+// Get current student's events
+router.get('/me/events', studentAuth, async (req, res) => {
+  try {
+    const registrations = await Registration.find({ student_id: req.student._id })
+      .populate({
+        path: 'event_id',
+        populate: {
+          path: 'college_id',
+          select: 'name'
+        }
+      })
+      .sort({ registered_at: -1 });
+
+    // Check feedback status for each registration
+    const registrationsWithFeedback = await Promise.all(
+      registrations.map(async (registration) => {
+        const feedback = await Feedback.findOne({
+          student_id: req.student._id,
+          event_id: registration.event_id._id
+        });
+        
+        return {
+          ...registration.toObject(),
+          hasFeedback: !!feedback
+        };
+      })
+    );
+
+    res.json(registrationsWithFeedback);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get student events (registered events)
 router.get('/:id/events', [adminAuth], async (req, res) => {
   try {
@@ -53,26 +89,6 @@ router.get('/:id/events', [adminAuth], async (req, res) => {
     }
 
     const registrations = await Registration.find({ student_id: studentId })
-      .populate({
-        path: 'event_id',
-        populate: {
-          path: 'college_id',
-          select: 'name'
-        }
-      })
-      .sort({ registered_at: -1 });
-
-    res.json(registrations);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Get current student's events
-router.get('/me/events', studentAuth, async (req, res) => {
-  try {
-    const registrations = await Registration.find({ student_id: req.student._id })
       .populate({
         path: 'event_id',
         populate: {

@@ -86,7 +86,8 @@ const MainTabs = () => (
 const AppNavigator = () => {
   const { student, loading } = useAuth();
 
-  console.log('🧭 AppNavigator - Loading:', loading, 'Student:', !!student);
+  console.log('🧭 AppNavigator - Loading:', loading, 'Student:', !!student, 'Student ID:', student?._id);
+  console.log('🔍 Full student object:', student);
 
   if (loading) {
     console.log('⏳ Showing loading screen');
@@ -97,6 +98,9 @@ const AppNavigator = () => {
       </View>
     );
   }
+
+  console.log('🎯 Rendering navigation - Student exists:', !!student);
+  console.log('🎯 Student value:', student);
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

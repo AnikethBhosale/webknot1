@@ -179,7 +179,8 @@ router.put('/:id/update', [
   body('description').optional().trim().isLength({ min: 10 }),
   body('start_time').optional().isISO8601(),
   body('end_time').optional().isISO8601(),
-  body('location').optional().trim().isLength({ min: 2 })
+  body('location').optional().trim().isLength({ min: 2 }),
+  body('status').optional().isIn(['upcoming', 'ongoing', 'completed', 'cancelled'])
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

@@ -7,6 +7,7 @@ import Events from './components/Events';
 import Students from './components/Students';
 import Attendance from './components/Attendance';
 import Reports from './components/Reports';
+import Feedback from './components/Feedback';
 import SuperAdmin from './components/SuperAdmin';
 import Layout from './components/Layout';
 
@@ -52,6 +53,7 @@ function App() {
               <Route path="students" element={<Students />} />
               <Route path="attendance" element={<Attendance />} />
               <Route path="reports" element={<Reports />} />
+              <Route path="feedback" element={<Feedback />} />
             </Route>
           </Routes>
         </div>
