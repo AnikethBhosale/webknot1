@@ -10,6 +10,7 @@ const SuperAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [collegeAdmins, setCollegeAdmins] = useState({});
 
   const [collegeForm, setCollegeForm] = useState({
     name: '',
@@ -33,6 +34,18 @@ const SuperAdmin = () => {
       ]);
       setColleges(collegesRes.data);
       setAdmins(adminsRes.data);
+      
+      // Fetch admins for each college
+      const adminPromises = collegesRes.data.map(college => 
+        axios.get(`/api/superadmin/colleges/${college._id}/admins`)
+      );
+      const adminResponses = await Promise.all(adminPromises);
+      
+      const collegeAdminsMap = {};
+      collegesRes.data.forEach((college, index) => {
+        collegeAdminsMap[college._id] = adminResponses[index].data;
+      });
+      setCollegeAdmins(collegeAdminsMap);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -76,6 +89,23 @@ const SuperAdmin = () => {
   const openAdminModal = (college) => {
     setSelectedCollege(college);
     setShowAdminModal(true);
+  };
+
+  const handleDeleteAdmin = async (adminId, collegeId) => {
+    if (!window.confirm('Are you sure you want to delete this admin?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/superadmin/admins/${adminId}`);
+      setMessage('Admin deleted successfully!');
+      
+      // Refresh the data
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting admin:', error);
+      setError(error.response?.data?.message || 'Failed to delete admin');
+    }
   };
 
   if (loading) {
@@ -123,9 +153,7 @@ const SuperAdmin = () => {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {colleges.map((college) => {
-              const collegeAdmin = admins.find(admin => 
-                admin.college_id && admin.college_id._id === college._id
-              );
+              const collegeAdminsList = collegeAdmins[college._id] || [];
               
               return (
                 <div key={college._id} className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
@@ -134,27 +162,46 @@ const SuperAdmin = () => {
                       <h4 className="font-semibold text-gray-900 text-lg">{college.name}</h4>
                       <p className="text-sm text-gray-600 mt-1">{college.address}</p>
                     </div>
-                    {collegeAdmin && (
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    )}
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                      {collegeAdminsList.length} Admin{collegeAdminsList.length !== 1 ? 's' : ''}
+                    </span>
                   </div>
                   
                   <div className="mt-4">
-                    {collegeAdmin ? (
-                      <div className="bg-green-50 p-3 rounded-md">
-                        <p className="text-sm text-green-800 font-medium">Admin Assigned</p>
-                        <p className="text-sm text-green-600">{collegeAdmin.email}</p>
+                    {collegeAdminsList.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-800 font-medium">Admins:</p>
+                        {collegeAdminsList.map((admin) => (
+                          <div key={admin._id} className="bg-green-50 p-3 rounded-md flex justify-between items-center">
+                            <div>
+                              <p className="text-sm text-green-800 font-medium">{admin.email}</p>
+                              <p className="text-xs text-green-600">
+                                Created: {new Date(admin.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteAdmin(admin._id, college._id)}
+                              className="text-red-600 hover:text-red-800 text-sm font-medium"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => openAdminModal(college)}
+                          className="w-full bg-primary-600 text-white px-4 py-2 rounded text-sm hover:bg-primary-700 transition-colors mt-2"
+                        >
+                          + Add Another Admin
+                        </button>
                       </div>
                     ) : (
                       <div className="bg-red-50 p-3 rounded-md">
-                        <p className="text-sm text-red-800 font-medium mb-2">No Admin Assigned</p>
+                        <p className="text-sm text-red-800 font-medium mb-2">No Admins Assigned</p>
                         <button
                           onClick={() => openAdminModal(college)}
                           className="w-full bg-primary-600 text-white px-4 py-2 rounded text-sm hover:bg-primary-700 transition-colors"
                         >
-                          + Create Admin
+                          + Create First Admin
                         </button>
                       </div>
                     )}

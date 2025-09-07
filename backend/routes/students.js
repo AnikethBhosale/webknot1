@@ -260,4 +260,33 @@ router.put('/change-password', [
   }
 });
 
+// Delete student (admin only)
+router.delete('/:studentId', adminAuth, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    // Check if student belongs to admin's college
+    if (student.college_id.toString() !== req.admin.college_id.toString()) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Delete all related data
+    await Promise.all([
+      Student.findByIdAndDelete(studentId),
+      Registration.deleteMany({ student_id: studentId }),
+      Feedback.deleteMany({ student_id: studentId })
+    ]);
+
+    res.json({ message: 'Student deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

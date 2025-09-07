@@ -53,6 +53,20 @@ const Students = () => {
     }
   };
 
+  const handleDeleteStudent = async (studentId, studentName) => {
+    if (!window.confirm(`Are you sure you want to delete student "${studentName}"? This action cannot be undone and will also delete all their registrations and feedback.`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/students/${studentId}`);
+      fetchStudents();
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      alert('Failed to delete student. Please try again.');
+    }
+  };
+
   const openModal = () => {
     setFormData({
       name: '',
@@ -107,6 +121,9 @@ const Students = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Joined
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -123,6 +140,14 @@ const Students = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(student.createdAt).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <button
+                    onClick={() => handleDeleteStudent(student._id, student.name)}
+                    className="text-red-600 hover:text-red-800 font-medium"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}

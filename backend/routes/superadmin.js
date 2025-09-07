@@ -115,7 +115,7 @@ router.get('/admins', [adminAuth, superAdminAuth], async (req, res) => {
   }
 });
 
-// Get college with its admin
+// Get college with its admins
 router.get('/colleges/:collegeId', [adminAuth, superAdminAuth], async (req, res) => {
   try {
     const { collegeId } = req.params;
@@ -125,12 +125,56 @@ router.get('/colleges/:collegeId', [adminAuth, superAdminAuth], async (req, res)
       return res.status(404).json({ message: 'College not found' });
     }
 
-    const admin = await Admin.findOne({ college_id: collegeId, role: 'college_admin' });
+    const admins = await Admin.find({ college_id: collegeId, role: 'college_admin' });
     
     res.json({
       college,
-      admin: admin || null
+      admins
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get all admins for a specific college
+router.get('/colleges/:collegeId/admins', [adminAuth, superAdminAuth], async (req, res) => {
+  try {
+    const { collegeId } = req.params;
+    
+    const college = await College.findById(collegeId);
+    if (!college) {
+      return res.status(404).json({ message: 'College not found' });
+    }
+
+    const admins = await Admin.find({ college_id: collegeId, role: 'college_admin' })
+      .select('-password')
+      .sort({ createdAt: -1 });
+    
+    res.json(admins);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete college admin
+router.delete('/admins/:adminId', [adminAuth, superAdminAuth], async (req, res) => {
+  try {
+    const { adminId } = req.params;
+    
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    if (admin.role === 'super_admin') {
+      return res.status(403).json({ message: 'Cannot delete super admin' });
+    }
+
+    await Admin.findByIdAndDelete(adminId);
+    
+    res.json({ message: 'Admin deleted successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
