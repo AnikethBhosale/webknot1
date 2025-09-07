@@ -44,7 +44,17 @@ const Dashboard = () => {
     }
   };
 
-  const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'];
+  // Event type color mapping for better understanding
+  const EVENT_TYPE_COLORS = {
+    'academic': '#3b82f6',    // Blue - represents learning and education
+    'cultural': '#ef4444',    // Red - represents arts and culture
+    'sports': '#10b981',      // Green - represents physical activity and health
+    'technical': '#f59e0b',   // Orange - represents technology and innovation
+    'social': '#8b5cf6',      // Purple - represents community and networking
+    'other': '#06b6d4'        // Cyan - represents miscellaneous events
+  };
+
+  const COLORS = Object.values(EVENT_TYPE_COLORS);
 
   if (loading) {
     return (
@@ -144,12 +154,28 @@ const Dashboard = () => {
                 dataKey="totalEvents"
               >
                 {eventTypeAnalytics.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={EVENT_TYPE_COLORS[entry.name] || COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
+          
+          {/* Event Type Legend */}
+          <div className="mt-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Event Type Legend:</h4>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {Object.entries(EVENT_TYPE_COLORS).map(([type, color]) => (
+                <div key={type} className="flex items-center space-x-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: color }}
+                  ></div>
+                  <span className="text-gray-600 capitalize">{type}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
